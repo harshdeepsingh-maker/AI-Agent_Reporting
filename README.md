@@ -1,9 +1,9 @@
-# 🐝 Agent Swarm Collaboration — Daily Performance Reporting System
+#  Agent Swarm Collaboration — Daily Performance Reporting System
 
 This repository implements a **multi-agent collaboration system** where specialized agents work together to generate a **daily company performance report**.  
 The design mimics the *Agent Swarms* concept — autonomous, specialized agents that communicate, coordinate, and produce results without manual intervention.
 
-## ⚙️ Architecture Overview
+##  Architecture Overview
 
 ```
 agent-swarm-submission/
@@ -34,7 +34,7 @@ agent-swarm-submission/
 
 ---
 
-## 🔑 Key Features
+##  Key Features
 
 - **Multi-Agent Architecture**  
   - Sales Agent fetches CRM data.  
@@ -64,7 +64,7 @@ agent-swarm-submission/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### 1. Clone the repository
 ```bash
@@ -91,7 +91,7 @@ Example (Linux):
 
 ---
 
-## 📊 Example Output
+##  Example Output
 
 **Email Subject:**  
 📈 Daily Performance Report — 2025-09-07  
@@ -106,7 +106,7 @@ Reports are generated using Jinja2 templates (`report_email.html` / `.txt`).
 
 ---
 
-## 🛡️ Error Handling
+## 🛡 Error Handling
 
 - **Sales Agent failure** → Marketing data included, sales marked as *missing*.  
 - **Marketing Agent failure** → Sales data included, marketing marked as *missing*.  
@@ -118,7 +118,7 @@ Errors are logged in structured JSON via `logging_utils.py`.
 
 
 
-## 👨‍💻 Author
+##  Author
 
 Developed by **Harshdeep Singh**  
 
