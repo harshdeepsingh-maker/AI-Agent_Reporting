@@ -94,7 +94,7 @@ Example (Linux):
 ##  Example Output
 
 **Email Subject:**  
-📈 Daily Performance Report — 2025-09-07  
+ Daily Performance Report — 2025-09-07  
 
 **Email Body (HTML):**
 - Sales Summary (last 24h)
@@ -106,7 +106,7 @@ Reports are generated using Jinja2 templates (`report_email.html` / `.txt`).
 
 ---
 
-## 🛡 Error Handling
+##  Error Handling
 
 - **Sales Agent failure** → Marketing data included, sales marked as *missing*.  
 - **Marketing Agent failure** → Sales data included, marketing marked as *missing*.  
