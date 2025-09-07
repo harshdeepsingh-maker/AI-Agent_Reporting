@@ -1,0 +1,26 @@
+
+Daily Performance Report — {{ report_date }} ({{ tz }})
+
+{% if sales %}
+Sales
+- Total Sales: ₹{{ "{:,.0f}".format(sales.total_sales) }}
+- New Customers: {{ sales.new_customers }}
+- Orders: {{ sales.orders }}
+- Avg Order Value: ₹{{ "{:,.2f}".format(sales.avg_order_value) }}
+{% else %}
+Sales
+- Data unavailable: {{ sales_error or "Unknown error" }}
+{% endif %}
+
+{% if marketing %}
+Marketing
+{% for c in campaigns %}
+- {{ c.name }}: CTR {{ "{:.1f}".format(c.click_rate) }}% | Conv: {{ c.conversions }} | Spend: ₹{{ "{:,.0f}".format(c.spend) }} | Rev: ₹{{ "{:,.0f}".format(c.revenue) }}{% if c.roas is not none %} | ROAS: {{ "{:.2f}".format(c.roas) }}x{% endif %}
+{% endfor %}
+{% else %}
+Marketing
+- Data unavailable: {{ marketing_error or "Unknown error" }}
+{% endif %}
+
+Notes
+- Generated at {{ generated_at }}.

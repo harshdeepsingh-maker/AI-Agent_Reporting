@@ -1,0 +1,90 @@
+﻿from __future__ import annotations
+import asyncio, io, base64, pathlib
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional, List
+
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+import matplotlib.pyplot as plt
+
+from agent_swarm.settings import SETTINGS
+from agent_swarm.eventbus import EventBus
+
+class ReportingAgent:
+    def __init__(self, bus: EventBus):
+        self.bus = bus
+
+    async def run_once(self) -> Dict[str, Any]:
+        # Wait for other agents to publish
+        sales_res = await self.bus.request("sales_result", timeout=2.0)
+        mkt_res   = await self.bus.request("marketing_result", timeout=2.0)
+
+        sales       = sales_res.get("data") if sales_res and sales_res.get("status") == "success" else None
+        sales_err   = None if sales else (sales_res or {}).get("error")
+        marketing   = mkt_res.get("data") if mkt_res and mkt_res.get("status") == "success" else None
+        mkt_err     = None if marketing else (mkt_res or {}).get("error")
+
+        # Compute ROAS if missing
+        campaigns: List[Dict[str, Any]] = (marketing or {}).get("campaigns", [])
+        for c in campaigns:
+            if c.get("roas") is None and c.get("spend", 0):
+                c["roas"] = round(float(c.get("revenue", 0)) / float(c.get("spend", 1)), 2)
+
+        # Simple chart (sales vs conversions if present)
+        chart_b64 = None
+        try:
+            values = []
+            labels = []
+            if sales:
+                values.append(sales.get("total_sales", 0))
+                labels.append("Sales")
+            if campaigns:
+                values.append(sum(x.get("conversions", 0) for x in campaigns))
+                labels.append("Conversions")
+            if values:
+                plt.figure(figsize=(4,2.2), dpi=120)
+                plt.bar(labels, values)
+                buf = io.BytesIO()
+                plt.tight_layout()
+                plt.savefig(buf, format="png")
+                plt.close()
+                buf.seek(0)
+                chart_b64 = "data:image/png;base64," + base64.b64encode(buf.read()).decode("ascii")
+        except Exception:
+            chart_b64 = None
+
+        # Templates loader
+        env = Environment(
+            loader=FileSystemLoader("src/templates"),
+            autoescape=select_autoescape(["html", "xml"])
+        )
+
+        today = datetime.now(timezone.utc).astimezone().date().isoformat()
+        ctx = {
+            "report_date": today,
+            "tz": SETTINGS.REPORT_TIMEZONE,
+            "generated_at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
+            "sales": sales,
+            "marketing": marketing,
+            "campaigns": campaigns,
+            "sales_error": sales_err,
+            "marketing_error": mkt_err,
+            "chart_b64": chart_b64,
+            # keep optional 'insights' absent to show template resilience
+        }
+
+        text = env.get_template("report_email.txt").render(**ctx)
+        html = env.get_template("report_email.html").render(**ctx)
+
+        subject = f"Daily Company Report — {today}"
+
+        # Save to outbox (or SMTP if configured)
+        from agent_swarm.utils.emailer import send_email
+        send_email(subject, html, text, SETTINGS.EMAIL_TO)
+
+        outdir = pathlib.Path("reports") / today
+        outdir.mkdir(parents=True, exist_ok=True)
+        (outdir / "email.html").write_text(html, encoding="utf-8")
+        (outdir / "email.txt").write_text(text, encoding="utf-8")
+
+        print({"subject": subject, "data_source": SETTINGS.DATA_SOURCE})
+        return {"status": "ok", "data_source": SETTINGS.DATA_SOURCE}

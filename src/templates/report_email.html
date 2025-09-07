@@ -1,0 +1,69 @@
+﻿<!doctype html>
+<html>
+  <body style="font-family:Arial,Helvetica,sans-serif;color:#222">
+    {% set ins = insights | default({}) %}
+    {% set totals = ins.get("totals", {}) %}
+    {% set delta = ins.get("delta", {}) %}
+    {% set best = ins.get("best_campaign") %}
+    {% set anomalies = ins.get("anomalies", []) %}
+
+    <h2>Daily Performance Report — {{ report_date }} <small style="color:#666">({{ tz }})</small></h2>
+
+    {% if chart_b64 %}
+    <div><img alt="Daily KPIs" src="{{ chart_b64 }}" style="max-width:100%;height:auto;border:1px solid #eee;padding:4px;border-radius:6px"/></div>
+    {% endif %}
+
+    <h3>Sales</h3>
+    {% if sales %}
+      <ul>
+        <li><b>Total Sales:</b> ₹{{ sales.total_sales | default(0) | float | round(0) }}</li>
+        <li><b>New Customers:</b> {{ sales.new_customers | default(0) }}</li>
+        <li><b>Orders:</b> {{ sales.orders | default(0) }}</li>
+        <li><b>Avg Order Value:</b> ₹{{ sales.avg_order_value | default(0) | float | round(2) }}</li>
+      </ul>
+    {% else %}
+      <p style="color:#b00;">Data unavailable: {{ sales_error or "Unknown error" }}</p>
+    {% endif %}
+
+    <h3>Marketing</h3>
+    {% if marketing %}
+      <table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;border-color:#ddd;">
+        <thead><tr><th>Campaign</th><th>CTR %</th><th>Conv.</th><th>Spend</th><th>Revenue</th><th>ROAS</th></tr></thead>
+        <tbody>
+          {% for c in campaigns %}
+          <tr>
+            <td>{{ c.name }}</td>
+            <td style="text-align:right">{{ c.click_rate | default(0) | float | round(1) }}</td>
+            <td style="text-align:right">{{ c.conversions | default(0) }}</td>
+            <td style="text-align:right">₹{{ c.spend | default(0) | float | round(0) }}</td>
+            <td style="text-align:right">₹{{ c.revenue | default(0) | float | round(0) }}</td>
+            <td style="text-align:right">{% if c.roas is defined and c.roas is not none %}{{ c.roas | float | round(2) }}x{% else %}-{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p style="color:#b00;">Data unavailable: {{ marketing_error or "Unknown error" }}</p>
+    {% endif %}
+
+    <h3>Key Insights</h3>
+    <ul>
+      {% if totals.get("total_sales") is not none %}
+      <li><b>DoD Sales Change:</b> {{ delta.get("sales_vs_yesterday_pct") if delta.get("sales_vs_yesterday_pct") is not none else "n/a" }}%</li>
+      {% endif %}
+      {% if totals.get("conversions") is not none %}
+      <li><b>DoD Conversions Change:</b> {{ delta.get("conversions_vs_yesterday_pct") if delta.get("conversions_vs_yesterday_pct") is not none else "n/a" }}%</li>
+      {% endif %}
+      {% if best %}
+      <li><b>Best Campaign (ROAS):</b> {{ best.name }} at {{ best.roas | float | round(2) }}x</li>
+      {% endif %}
+      {% if anomalies and anomalies | length > 0 %}
+      <li><b>Anomalies:</b> {% for a in anomalies %}{{ a.metric }}{% if a.z_score is defined %} (z={{ a.z_score }}){% endif %}{% if a.value is defined %} ({{ a.value }}%) {% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</li>
+      {% else %}
+      <li><b>Anomalies:</b> none detected</li>
+      {% endif %}
+    </ul>
+
+    <p style="color:#666">Generated at {{ generated_at }}.</p>
+  </body>
+</html>

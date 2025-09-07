@@ -1,0 +1,26 @@
+{
+  "date": "2025-08-22",
+  "campaigns": [
+    {
+      "name": "Email - Independence Offer",
+      "click_rate": 12.4,
+      "conversions": 5,
+      "spend": 4500,
+      "revenue": 22000
+    },
+    {
+      "name": "Google Ads - Branded",
+      "click_rate": 8.1,
+      "conversions": 15,
+      "spend": 12500,
+      "revenue": 91000
+    },
+    {
+      "name": "Meta - Prospecting",
+      "click_rate": 1.9,
+      "conversions": 7,
+      "spend": 8200,
+      "revenue": 37000
+    }
+  ]
+}

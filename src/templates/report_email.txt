@@ -1,0 +1,44 @@
+﻿{% set ins = insights | default({}) %}
+{% set totals = ins.get("totals", {}) %}
+{% set delta = ins.get("delta", {}) %}
+{% set best = ins.get("best_campaign") %}
+{% set anomalies = ins.get("anomalies", []) %}
+
+Daily Performance Report — {{ report_date }} ({{ tz }})
+
+{% if sales %}
+Sales
+- Total Sales: ₹{{ sales.total_sales | default(0) | float | round(0) }}
+- New Customers: {{ sales.new_customers | default(0) }}
+- Orders: {{ sales.orders | default(0) }}
+- Avg Order Value: ₹{{ sales.avg_order_value | default(0) | float | round(2) }}
+{% else %}
+Sales
+- Data unavailable: {{ sales_error or "Unknown error" }}
+{% endif %}
+
+{% if marketing %}
+Marketing
+{% for c in campaigns %}
+- {{ c.name }}: CTR {{ c.click_rate | default(0) | float | round(1) }}% | Conv: {{ c.conversions | default(0) }} | Spend: ₹{{ c.spend | default(0) | float | round(0) }} | Rev: ₹{{ c.revenue | default(0) | float | round(0) }}{% if c.roas is defined and c.roas is not none %} | ROAS: {{ c.roas | float | round(2) }}x{% endif %}
+{% endfor %}
+{% else %}
+Marketing
+- Data unavailable: {{ marketing_error or "Unknown error" }}
+{% endif %}
+
+Key Insights
+{% if totals.get("total_sales") is not none %}- DoD Sales Change: {{ delta.get("sales_vs_yesterday_pct") if delta.get("sales_vs_yesterday_pct") is not none else "n/a" }}%
+{% endif %}{% if totals.get("conversions") is not none %}
+- DoD Conversions Change: {{ delta.get("conversions_vs_yesterday_pct") if delta.get("conversions_vs_yesterday_pct") is not none else "n/a" }}%{% endif %}
+{% if best %}
+- Best Campaign (ROAS): {{ best.name }} at {{ best.roas | float | round(2) }}x
+{% endif %}
+{% if anomalies and anomalies | length > 0 %}
+- Anomalies: {% for a in anomalies %}{{ a.metric }}{% if a.z_score is defined %} (z={{ a.z_score }}){% endif %}{% if a.value is defined %} ({{ a.value }}%) {% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
+{% else %}
+- Anomalies: none detected
+{% endif %}
+
+Notes
+- Generated at {{ generated_at }}.

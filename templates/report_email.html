@@ -1,0 +1,45 @@
+
+<!doctype html>
+<html>
+  <body style="font-family:Arial,Helvetica,sans-serif;color:#222">
+    <h2>Daily Performance Report — {{ report_date }} <small style="color:#666">({{ tz }})</small></h2>
+    {% if chart_b64 %}
+      <div><img alt="Daily KPIs" src="{{ chart_b64 }}" style="max-width:100%;height:auto;border:1px solid #eee;padding:4px;border-radius:6px"/></div>
+    {% endif %}
+
+    <h3>Sales</h3>
+    {% if sales %}
+      <ul>
+        <li><b>Total Sales:</b> ₹{{ "{:,.0f}".format(sales.total_sales) }}</li>
+        <li><b>New Customers:</b> {{ sales.new_customers }}</li>
+        <li><b>Orders:</b> {{ sales.orders }}</li>
+        <li><b>Avg Order Value:</b> ₹{{ "{:,.2f}".format(sales.avg_order_value) }}</li>
+      </ul>
+    {% else %}
+      <p style="color:#b00;">Data unavailable: {{ sales_error or "Unknown error" }}</p>
+    {% endif %}
+
+    <h3>Marketing</h3>
+    {% if marketing %}
+      <table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;border-color:#ddd;">
+        <thead><tr><th>Campaign</th><th>CTR %</th><th>Conv.</th><th>Spend</th><th>Revenue</th><th>ROAS</th></tr></thead>
+        <tbody>
+          {% for c in campaigns %}
+          <tr>
+            <td>{{ c.name }}</td>
+            <td style="text-align:right">{{ "{:.1f}".format(c.click_rate) }}</td>
+            <td style="text-align:right">{{ c.conversions }}</td>
+            <td style="text-align:right">₹{{ "{:,.0f}".format(c.spend) }}</td>
+            <td style="text-align:right">₹{{ "{:,.0f}".format(c.revenue) }}</td>
+            <td style="text-align:right">{% if c.roas is not none %}{{ "{:.2f}".format(c.roas) }}x{% else %}-{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p style="color:#b00;">Data unavailable: {{ marketing_error or "Unknown error" }}</p>
+    {% endif %}
+
+    <p style="color:#666">Generated at {{ generated_at }}.</p>
+  </body>
+</html>
